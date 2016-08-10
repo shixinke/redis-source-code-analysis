@@ -22,3 +22,13 @@
 
 ###7、其他
 
+注：
+
+本项目使用的是redis3.0.7的源码
+
+本人对C语言理解不深，可以与本人一起学习、研究、成长
+
+博客：http://www.shixinke.com/
+
+E-mail:ishixinke@qq.com
+
