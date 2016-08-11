@@ -61,10 +61,50 @@ struct sdshdr {
  * size_t 是一个long unsigned int
  */
 static inline size_t sdslen(const sds s) {
+    /**
+     * 为什么这么实现呢？
+     * 分析点如下：
+     * 1、因为sdslen是在初始化sdshdr结构体后才能使用，所以要结合sdshdr的声明，注意这里的s其实和sdshdr->buf是指向同一个内在空间地址的
+     * 2、结构体和数组类似，它的成员在内存中存储的地址是连续的，即结构体变量在内存中占用一段连续的地址，每个成员变量地址是相连的
+     *
+     * 做个实验：
+     #include <stdio.h>
+     #include <string.h>
+     #include <stdlib.h>
+     typedef char *sds;
+     struct sdshdr {
+         int len;
+         int free;
+         char buf[];
+     };
+
+     int main()
+     {
+         char *str = "name";
+         struct sdshdr sdsobj, *ptr;
+         ptr = &sdsobj;
+
+         ptr->len = 4;
+         ptr->free = 0;
+         memcpy(ptr->buf, str, 5);
+         printf("&ptr->len:%p\n", &ptr->len);    //0x7fff4e6c8ff0
+         printf("&ptr->free:%p\n", &ptr->free);  //0x7fff4e6c8ff4
+         printf("&ptr->buf:%p\n", &ptr->buf);    //0x7fff4e6c8ff8
+         printf("ptr:%p\n", ptr);                //0x7fff4e6c8ff0
+         return 0;
+     }
+     * 从上面的实验可知结构体指针ptr与buf指向的指针相关的就是len+free的size(即sdshdr的size，因为buf[]没有分配内存空间)之差
+     * 因此可以通过buf的地址减去sdshdr的size，可以得到sdshdr结构体的指针
+     */
     struct sdshdr *sh = (void*)(s-(sizeof(struct sdshdr)));
     return sh->len;
 }
 
+/**
+ * 获取sds字符串可使用的内在空间大小
+ * @param s
+ * @return
+ */
 static inline size_t sdsavail(const sds s) {
     struct sdshdr *sh = (void*)(s-(sizeof(struct sdshdr)));
     return sh->free;

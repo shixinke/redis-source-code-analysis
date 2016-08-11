@@ -88,23 +88,41 @@ sds sdsnewlen(const void *init, size_t initlen) {
     return (char*)sh->buf;
 }
 
+/**
+ * 生成一个空字符串
+ * @return
+ */
 /* Create an empty (zero length) sds string. Even in this case the string
  * always has an implicit null term. */
 sds sdsempty(void) {
     return sdsnewlen("",0);
 }
 
+/**
+ * 创建一个字符串
+ * @param init
+ * @return
+ */
 /* Create a new sds string starting from a null terminated C string. */
 sds sdsnew(const char *init) {
     size_t initlen = (init == NULL) ? 0 : strlen(init);
     return sdsnewlen(init, initlen);
 }
 
+/**
+ * 复制一个字符串
+ * @param s
+ * @return
+ */
 /* Duplicate an sds string. */
 sds sdsdup(const sds s) {
     return sdsnewlen(s, sdslen(s));
 }
 
+/**
+ * 释放sds字符串的内存空间(不是真正的释放)
+ * @param s
+ */
 /* Free an sds string. No operation is performed if 's' is NULL. */
 void sdsfree(sds s) {
     if (s == NULL) return;
@@ -125,6 +143,10 @@ void sdsfree(sds s) {
  * The output will be "2", but if we comment out the call to sdsupdatelen()
  * the output will be "6" as the string was modified but the logical length
  * remains 6 bytes. */
+/**
+ * 修改字符串的长度
+ * @param s
+ */
 void sdsupdatelen(sds s) {
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
     int reallen = strlen(s);
@@ -136,6 +158,10 @@ void sdsupdatelen(sds s) {
  * However all the existing buffer is not discarded but set as free space
  * so that next append operations will not require allocations up to the
  * number of bytes previously available. */
+/**
+ * 清除sds字符串的内容(将buf属性置为空字符串)
+ * @param s
+ */
 void sdsclear(sds s) {
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
     sh->free += sh->len;
@@ -149,22 +175,32 @@ void sdsclear(sds s) {
  *
  * Note: this does not change the *length* of the sds string as returned
  * by sdslen(), but only the free buffer space we have. */
+/**
+ * 为sds字符串增加内存空间(在修改sds内容前调用)
+ * @param s 字符串
+ * @param addlen 添加的长度
+ * @return
+ */
 sds sdsMakeRoomFor(sds s, size_t addlen) {
     struct sdshdr *sh, *newsh;
+    //查看sds字符串可用的剩余空间
     size_t free = sdsavail(s);
     size_t len, newlen;
-
+    //如果剩余空间不小于要增加的空间，直接返回
     if (free >= addlen) return s;
     len = sdslen(s);
     sh = (void*) (s-(sizeof(struct sdshdr)));
+    //增加后的空间大小
     newlen = (len+addlen);
+    //如果最终的空间大小小于预分配空间的最大值(1M)
     if (newlen < SDS_MAX_PREALLOC)
-        newlen *= 2;
+        newlen *= 2;    //即原来是14个字节，则增加后的字节为28个字节(即留目前字符串长度对等的空间大小)
     else
-        newlen += SDS_MAX_PREALLOC;
+        newlen += SDS_MAX_PREALLOC; //则在申请的基础上增加1M空闲空间
+    //为sds字符串重新分配空间
     newsh = zrealloc(sh, sizeof(struct sdshdr)+newlen+1);
     if (newsh == NULL) return NULL;
-
+    //计算剩余空间大小
     newsh->free = newlen - len;
     return newsh->buf;
 }
@@ -175,6 +211,11 @@ sds sdsMakeRoomFor(sds s, size_t addlen) {
  *
  * After the call, the passed sds string is no longer valid and all the
  * references must be substituted with the new pointer returned by the call. */
+/**
+ * 删除sds字符串的空闲空间
+ * @param s
+ * @return
+ */
 sds sdsRemoveFreeSpace(sds s) {
     struct sdshdr *sh;
 
@@ -190,6 +231,11 @@ sds sdsRemoveFreeSpace(sds s) {
  * 2) The string.
  * 3) The free buffer at the end if any.
  * 4) The implicit null term.
+ */
+/**
+ * 计算sds需要申请的内存空间大小
+ * @param s
+ * @return
  */
 size_t sdsAllocSize(sds s) {
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
@@ -220,6 +266,11 @@ size_t sdsAllocSize(sds s) {
  * ... check for nread <= 0 and handle it ...
  * sdsIncrLen(s, nread);
  */
+/**
+ * 重新计算sds字符串增加或减少指定大小的内存空间后的长度和剩余空间大小
+ * @param s
+ * @param incr
+ */
 void sdsIncrLen(sds s, int incr) {
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
 
@@ -237,16 +288,48 @@ void sdsIncrLen(sds s, int incr) {
  *
  * if the specified length is smaller than the current length, no operation
  * is performed. */
+/**
+ * 将sds空间扩展到指定大小，并将新申请的空闲空间内容填充为0
+ * @param s sds字符串
+ * @param len  扩展后的大小
+ * @return
+ */
 sds sdsgrowzero(sds s, size_t len) {
     struct sdshdr *sh = (void*)(s-(sizeof(struct sdshdr)));
     size_t totlen, curlen = sh->len;
-
+    //如果扩展后的空间比当前sds所占空间小，则直接返回(说明已经扩充过)
     if (len <= curlen) return s;
+    //重新分配内存空间
     s = sdsMakeRoomFor(s,len-curlen);
     if (s == NULL) return NULL;
 
     /* Make sure added region doesn't contain garbage */
     sh = (void*)(s-(sizeof(struct sdshdr)));
+    //将新增加的空间内容设置为0
+    /**
+     * memset
+     * 功能：将指向某块内存空间中的每个字节的内容全部设置成指定的字符，一般是为重新申请的内存空间做初始化工作
+     * 用法：memset(void *ptr, int ch, size_t n)
+     * 参数说明：
+     * @param void * ptr:内存空间地址(指针，要填充的内存块)
+     * @param int ch:填充的字符
+     * @param size_t n:内存块大小
+     *
+     * 实例：
+        #include <stdio.h>
+        #include <string.h>
+        int main()
+        {
+            char buffer[12] = "hello,world";
+            printf("memset before:%s\n", buffer);    //hello,world!
+            memset(buffer, '*', strlen(buffer));
+            printf("memset after:%s\n", buffer);     //***********
+            memset(buffer+1, 0, strlen(buffer)-1);
+            printf("memset again:%s\n", buffer);     //*
+        }
+
+     * s+curlen是sdshdr结构体中buf数组末尾的位置
+     */
     memset(s+curlen,0,(len-curlen+1)); /* also set trailing \0 byte */
     totlen = sh->len+sh->free;
     sh->len = len;
@@ -259,13 +342,22 @@ sds sdsgrowzero(sds s, size_t len) {
  *
  * After the call, the passed sds string is no longer valid and all the
  * references must be substituted with the new pointer returned by the call. */
+/**
+ * 将字符串t中的前len个字符拼接到sds字符串后面
+ * @param s：字符串
+ * @param t：拼接使用的字符串
+ * @param len：拼接
+ * @return
+ */
 sds sdscatlen(sds s, const void *t, size_t len) {
     struct sdshdr *sh;
+    //当前sds字符串的长度
     size_t curlen = sdslen(s);
-
+    //为sds字符串重新分配空间(以便可以有足够的空间容纳新的内容)
     s = sdsMakeRoomFor(s,len);
     if (s == NULL) return NULL;
     sh = (void*) (s-(sizeof(struct sdshdr)));
+    //将t的前len个字符拼接到buf数组中
     memcpy(s+curlen, t, len);
     sh->len = curlen+len;
     sh->free = sh->free-len;
@@ -277,6 +369,12 @@ sds sdscatlen(sds s, const void *t, size_t len) {
  *
  * After the call, the passed sds string is no longer valid and all the
  * references must be substituted with the new pointer returned by the call. */
+/**
+ * 将字符串t拼接到sds字符串s后面
+ * @param s sds字符串
+ * @param t 拼接使用的字符串
+ * @return
+ */
 sds sdscat(sds s, const char *t) {
     return sdscatlen(s, t, strlen(t));
 }
@@ -285,16 +383,29 @@ sds sdscat(sds s, const char *t) {
  *
  * After the call, the modified sds string is no longer valid and all the
  * references must be substituted with the new pointer returned by the call. */
+/**
+ * 将两个sds字符串拼接到一起
+ * @param s
+ * @param t
+ * @return
+ */
 sds sdscatsds(sds s, const sds t) {
     return sdscatlen(s, t, sdslen(t));
 }
 
 /* Destructively modify the sds string 's' to hold the specified binary
  * safe string pointed by 't' of length 'len' bytes. */
+/**
+ * 将某个字符串指针对应的内容的前n个字符复制到sds指针对应的空间中
+ * @param s sds字符串
+ * @param t 用于复制的字符串
+ * @param len 复制长度
+ * @return
+ */
 sds sdscpylen(sds s, const char *t, size_t len) {
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
     size_t totlen = sh->free+sh->len;
-
+    //空间不足则重新申请分配内存
     if (totlen < len) {
         s = sdsMakeRoomFor(s,len-sh->len);
         if (s == NULL) return NULL;
@@ -310,6 +421,12 @@ sds sdscpylen(sds s, const char *t, size_t len) {
 
 /* Like sdscpylen() but 't' must be a null-termined string so that the length
  * of the string is obtained with strlen(). */
+/**
+ * 将字符串整个串空间复制到sds空间中
+ * @param s sds字符串
+ * @param t 复制使用的字符串
+ * @return
+ */
 sds sdscpy(sds s, const char *t) {
     return sdscpylen(s, t, strlen(t));
 }
@@ -585,6 +702,12 @@ sds sdscatfmt(sds s, char const *fmt, ...) {
  *
  * Output will be just "Hello World".
  */
+/**
+ * 删除sds字符串左右两边的指定的字符串(这与其他语言中的trim函数是有所不同的)
+ * @param s sds字符串
+ * @param cset 要搜索删除的字符串
+ * @return
+ */
 sds sdstrim(sds s, const char *cset) {
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
     char *start, *end, *sp, *ep;
@@ -592,6 +715,26 @@ sds sdstrim(sds s, const char *cset) {
 
     sp = start = s;
     ep = end = s+sdslen(s)-1;
+    /**
+     * strchr
+     * 功能:查找某个字符在字符串中首次出现的位置
+     * 用法：strchr(const char *str, int c)
+     * 参数说明：
+     * @param const char *str:目录字符串
+     * @param int c:要查找的字符
+     * 返回值：返回位置的指针
+     *
+     * 实例
+     #include <stdio.h>
+     #include <string.h>
+     int main()
+     {
+        char *str = "<a href='http://www.baidu.com'>百度</a>";
+        printf("%p\n", str);                      //0x400800
+        printf("%p\n", strchr(str, 'a'));         //0x400801
+     }
+     */
+
     while(sp <= end && strchr(cset, *sp)) sp++;
     while(ep > start && strchr(cset, *ep)) ep--;
     len = (sp > ep) ? 0 : ((ep-sp)+1);
@@ -958,6 +1101,14 @@ err:
  *
  * The function returns the sds string pointer, that is always the same
  * as the input pointer since no resize is needed. */
+/**
+ * 将目标字符串前N个字符与另外一个字符串中前N个字符依次比较，将相同的字符串替换成指定的字符
+ * @param s 目标字符串(被替换的字符串)
+ * @param from 比较字符串(用来与目标字符串作比较的字符串)
+ * @param to   替换字符串
+ * @param setlen 替换的长度
+ * @return
+ */
 sds sdsmapchars(sds s, const char *from, const char *to, size_t setlen) {
     size_t j, i, l = sdslen(s);
 
@@ -972,14 +1123,25 @@ sds sdsmapchars(sds s, const char *from, const char *to, size_t setlen) {
     return s;
 }
 
+/**
+ * 将一个c字符串数组拼接成一个新的sds字符串
+ * @param argv 字符串数组
+ * @param argc 字符串数组长度
+ * @param sep 分割符
+ * @return
+ */
 /* Join an array of C strings using the specified separator (also a C string).
  * Returns the result as an sds string. */
 sds sdsjoin(char **argv, int argc, char *sep) {
+    //先创建一个新的空sds字符串，用来保存最后拼接的字符串
     sds join = sdsempty();
+    //遍历使用的变量
     int j;
 
     for (j = 0; j < argc; j++) {
+        //将数组中的每个元素都拼接到sds字符串join上
         join = sdscat(join, argv[j]);
+        //如果不是最后一个元素，在每次拼接时要加上分割符
         if (j != argc-1) join = sdscat(join,sep);
     }
     return join;
