@@ -470,6 +470,7 @@ int sdsll2str(char *s, long long value) {
 }
 
 /* Identical sdsll2str(), but for unsigned long long type. */
+
 int sdsull2str(char *s, unsigned long long v) {
     char *p, aux;
     size_t l;
@@ -761,11 +762,20 @@ sds sdstrim(sds s, const char *cset) {
  * s = sdsnew("Hello World");
  * sdsrange(s,1,-1); => "ello World"
  */
+/**
+ * 从指定位置截取sds字符串(覆盖原字符串)
+ * @param s 被截取的字符串
+ * @param start 开始位置(索引位置)
+ * @param end   结束位置(索引位置)
+ */
 void sdsrange(sds s, int start, int end) {
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
+    //计算原字符串的长度
     size_t newlen, len = sdslen(s);
-
+    //如果是空字符串直接返回
     if (len == 0) return;
+    //如果开始位置为负数，则表示是从字符串后面开始截取(计算得出其位置)
+    //比如一个字符串，长度为10,start为-1，则其开始位置为最后一个字符的位置
     if (start < 0) {
         start = len+start;
         if (start < 0) start = 0;
@@ -774,15 +784,20 @@ void sdsrange(sds s, int start, int end) {
         end = len+end;
         if (end < 0) end = 0;
     }
+    //计算新字符串的长度
     newlen = (start > end) ? 0 : (end-start)+1;
+    //如果截取长度不为0
     if (newlen != 0) {
+        //如果开始位置比新字符串长度还大，那截取的肯定啥也没有，所以，字符串长度为0
         if (start >= (signed)len) {
             newlen = 0;
         } else if (end >= (signed)len) {
+            //如果结束位置比原字符串长度还大，那么结束位置就指定为最后一个字符的索引位置(因为索引是从0开始的)
             end = len-1;
             newlen = (start > end) ? 0 : (end-start)+1;
         }
     } else {
+        //开始位置为0
         start = 0;
     }
     if (start && newlen) memmove(sh->buf, sh->buf+start, newlen);
@@ -792,16 +807,38 @@ void sdsrange(sds s, int start, int end) {
 }
 
 /* Apply tolower() to every character of the sds string 's'. */
+/**
+ * 将sds字符串每个字符换成小写
+ * @param s
+ */
 void sdstolower(sds s) {
     int len = sdslen(s), j;
-
+    /**
+     * tolower
+     * 功能：将一个字符换成大小写(只能字母起作用)
+     * 用法：tolower(in ch)
+     * 位置：<ctype.h>
+     * 参数：int ch：要换的字符
+     * 返回值：返回替换后的小写字符
+     */
     for (j = 0; j < len; j++) s[j] = tolower(s[j]);
 }
 
 /* Apply toupper() to every character of the sds string 's'. */
+/**
+ * 将sds字符串中的每个字符换成大写
+ * @param s
+ */
 void sdstoupper(sds s) {
     int len = sdslen(s), j;
-
+    /**
+     * toupper
+     * 功能：将一个字符换成小写
+     * 用法：toupper(in ch)
+     * 位置：<ctype.h>
+     * 参数：int ch：要替换的字符
+     * 返回值：返回替换后的大写字符
+     */
     for (j = 0; j < len; j++) s[j] = toupper(s[j]);
 }
 
@@ -816,15 +853,35 @@ void sdstoupper(sds s) {
  * If two strings share exactly the same prefix, but one of the two has
  * additional characters, the longer string is considered to be greater than
  * the smaller one. */
+/**
+ * 比较两个sds字符串
+ * @param s1
+ * @param s2
+ * @return
+ */
 int sdscmp(const sds s1, const sds s2) {
     size_t l1, l2, minlen;
     int cmp;
 
     l1 = sdslen(s1);
     l2 = sdslen(s2);
+    //比较的长度(哪个字符串短就使用哪个字符串的长度)
     minlen = (l1 < l2) ? l1 : l2;
+    /**
+     * memcmp
+     * 功能：比较两个指针所指的内存区间的前n个字符，依次比较(对应的ASCII值)，若差为0则继续比较下一个，不为0,则直接返回其差值
+     * 位置：<string.h>
+     * 用法：memcmp(const void *s1, const void *s2, size_t n)
+     * 参数：
+     *   @param void * s1：第一个指针
+     *   @param void * s2:第二个指针
+     *   @param size_t n:比较的字符个数
+     * 返回值：如果两个指针指向的内容的前n个字符都相等，则返回0,否则返回第一个不同值的差值
+     */
     cmp = memcmp(s1,s2,minlen);
+    //如果两个字符串在前minlen中完全相同，则返回其长度差
     if (cmp == 0) return l1-l2;
+    //否则返回字符串比较的差值
     return cmp;
 }
 
@@ -843,6 +900,15 @@ int sdscmp(const sds s1, const sds s2) {
  * This version of the function is binary-safe but
  * requires length arguments. sdssplit() is just the
  * same function but for zero-terminated strings.
+ */
+/**
+ * 将一个字符串的前len个字符按照指定的分割符分割成数组
+ * @param s 要分割的字符串
+ * @param len
+ * @param sep
+ * @param seplen
+ * @param count
+ * @return
  */
 sds *sdssplitlen(const char *s, int len, const char *sep, int seplen, int *count) {
     int elements = 0, slots = 5, start = 0, j;
@@ -894,6 +960,11 @@ cleanup:
 }
 
 /* Free the result returned by sdssplitlen(), or do nothing if 'tokens' is NULL. */
+/**
+ * 释放分割的字符串数组的内存空间
+ * @param tokens
+ * @param count
+ */
 void sdsfreesplitres(sds *tokens, int count) {
     if (!tokens) return;
     while(count--)
@@ -907,6 +978,13 @@ void sdsfreesplitres(sds *tokens, int count) {
  *
  * After the call, the modified sds string is no longer valid and all the
  * references must be substituted with the new pointer returned by the call. */
+/**
+ * 将一个字符串添加到sds字符串中，并将其中的转义符进行转义
+ * @param s
+ * @param p
+ * @param len
+ * @return
+ */
 sds sdscatrepr(sds s, const char *p, size_t len) {
     s = sdscatlen(s,"\"",1);
     while(len--) {
@@ -934,6 +1012,11 @@ sds sdscatrepr(sds s, const char *p, size_t len) {
 
 /* Helper function for sdssplitargs() that returns non zero if 'c'
  * is a valid hex digit. */
+/**
+ * 判断是否是十六进制整数
+ * @param c
+ * @return
+ */
 int is_hex_digit(char c) {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
            (c >= 'A' && c <= 'F');
@@ -941,6 +1024,11 @@ int is_hex_digit(char c) {
 
 /* Helper function for sdssplitargs() that converts a hex digit into an
  * integer from 0 to 15 */
+/**
+ * 十六进制换成十进制整数
+ * @param c
+ * @return
+ */
 int hex_digit_to_int(char c) {
     switch(c) {
     case '0': return 0;
@@ -981,6 +1069,13 @@ int hex_digit_to_int(char c) {
  * input string is empty, or NULL if the input contains unbalanced
  * quotes or closed quotes followed by non space characters
  * as in: "foo"bar or "foo'
+ */
+
+/**
+ * 分割参数为一个参数数组
+ * @param line 参数
+ * @param argc 参数个数指针
+ * @return
  */
 sds *sdssplitargs(const char *line, int *argc) {
     const char *p = line;
