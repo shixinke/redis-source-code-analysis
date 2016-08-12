@@ -30,46 +30,23 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="sds.c" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/sds.c">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="15219">
-              <caret line="963" column="11" selection-start-line="963" selection-start-column="11" selection-end-line="963" selection-end-column="11" />
-              <folding>
-                <element signature="e#1650#1668#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="string.h" pinned="false" current-in-tab="false">
-        <entry file="file:///usr/include/string.h">
+      <file leaf-file-name="adlist.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/adlist.h">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="302">
-              <caret line="64" column="11" selection-start-line="64" selection-start-column="11" selection-end-line="64" selection-end-column="11" />
+              <caret line="58" column="12" selection-start-line="58" selection-start-column="12" selection-end-line="58" selection-end-column="12" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="zmalloc.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/zmalloc.h">
+      <file leaf-file-name="adlist.c" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/adlist.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1742">
-              <caret line="67" column="6" selection-start-line="67" selection-start-column="6" selection-end-line="67" selection-end-column="6" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="sds.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/sds.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2392">
-              <caret line="92" column="65" selection-start-line="92" selection-start-column="65" selection-end-line="92" selection-end-column="65" />
+            <state relative-caret-position="3474">
+              <caret line="389" column="20" selection-start-line="389" selection-start-column="20" selection-end-line="389" selection-end-column="20" />
               <folding>
-                <element signature="e#1721#1743#0" expanded="true" />
-                <element signature="e#4030#4076#0" expanded="true" />
+                <element signature="e#1670#1689#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -83,6 +60,8 @@
         <option value="$PROJECT_DIR$/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/src/sds.h" />
         <option value="$PROJECT_DIR$/src/sds.c" />
+        <option value="$PROJECT_DIR$/src/adlist.h" />
+        <option value="$PROJECT_DIR$/src/adlist.c" />
       </list>
     </option>
   </component>
@@ -351,12 +330,12 @@
       <option name="presentableId" value="Default" />
       <updated>1470801481169</updated>
       <workItem from="1470801482670" duration="24075000" />
-      <workItem from="1470965122763" duration="3799000" />
+      <workItem from="1470965122763" duration="10282000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="27874000" />
+    <option name="totallyTimeSpent" value="34357000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1920" height="1044" extended-state="0" />
@@ -398,20 +377,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file:///usr/lib/gcc/x86_64-linux-gnu/5/include/stddef.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="302">
-          <caret line="212" column="39" selection-start-line="212" selection-start-column="22" selection-end-line="212" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/t_list.c">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/t_set.c">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="26">
@@ -758,10 +723,28 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/sds.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15219">
+        <state relative-caret-position="12957">
           <caret line="963" column="11" selection-start-line="963" selection-start-column="11" selection-end-line="963" selection-end-column="11" />
           <folding>
             <element signature="e#1650#1668#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/adlist.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="302">
+          <caret line="58" column="12" selection-start-line="58" selection-start-column="12" selection-end-line="58" selection-end-column="12" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/adlist.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3474">
+          <caret line="389" column="20" selection-start-line="389" selection-start-column="20" selection-end-line="389" selection-end-column="20" />
+          <folding>
+            <element signature="e#1670#1689#0" expanded="true" />
           </folding>
         </state>
       </provider>
